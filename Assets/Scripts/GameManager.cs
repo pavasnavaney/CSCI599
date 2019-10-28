@@ -47,7 +47,7 @@ public class GameManager : MonoBehaviour
     private static float roundTime = 20f;
     private float roundTimer = roundTime;
 
-    private string serverIP = "127.0.0.1";
+    private string serverIP = "10.25.205.100";
     private System.Int32 serverPort = 8000;
     private TcpClient socketConnection; 	
 	private Thread clientThread; 	
