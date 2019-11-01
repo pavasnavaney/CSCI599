@@ -1,0 +1,55 @@
+{
+    "Questions":
+    
+    [
+        {
+            "questionText": "The answer is really big",
+            "answers": ["THE ANSWER", "Really big", "An elephant", "'The data given is insufficient."],
+            "correctAnswer": 1
+        },
+        {
+            "questionText": "Divide 30 by half and add ten",
+            "answers": ["40.5", "50", "70", "0"],
+            "correctAnswer": 2
+        },
+        {
+            "questionText": "How many months have 28 days?",
+            "answers": ["2", "1", "12", "Depends if there's a leap year or not"],
+            "correctAnswer": 2
+        },
+        {
+            "questionText": "On a windy day, a rooster lays an egg on a roof, which side of the roof does the egg roll down?",
+            "answers": ["Left", "Right", "None", "North"],
+            "correctAnswer": 2
+        },
+        {
+            "questionText": "Sitting at the table there are 4 daughters, 2 sisters, and 3 mothers. What’s the minimum amount of people at the table?",
+            "answers": ["9", "8", "5", "7"],
+            "correctAnswer": 2
+        },
+        {
+            "questionText": "If buying one candy and one magazine costs $1.10 and the magazine costs $1 more than the candy, how much does the candy costs?",
+            "answers": ["$1.05", "$0.1", "$0.05", "$1"],
+            "correctAnswer": 2
+        },        {
+            "questionText": "If there are 8 apples and you take away 6, how many apples you have?",
+            "answers": ["8", "2", "6", "'4"],
+            "correctAnswer": 2
+        },
+        {
+            "questionText": "What goes up and down, but still remains in the same place?",
+            "answers": ["Sky", "Sound", "Stairs", "Sin"],
+            "correctAnswer": 2
+        },
+        {
+            "questionText": "Complete the sequence: 1,1,2,3,5,8,13, _ ,34",
+            "answers": ["20", "21", "25", "17"],
+            "correctAnswer": 1
+        },
+        {
+            "questionText": "What disappears the moment you say its name?",
+            "answers": ["Name", "Feeling", "Silence", "Sorrow"],
+            "correctAnswer": 2
+        }
+    ]
+}
