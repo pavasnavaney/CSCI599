@@ -297,6 +297,7 @@
 /define:CSHARP_7_3_OR_NEWER
 "Assets/Scripts/Click.cs"
 "Assets/Scripts/Connection.cs"
+"Assets/Scripts/Data.cs"
 "Assets/Scripts/GameManager.cs"
 "Assets/Scripts/JSON.cs"
 "Assets/Scripts/Player.cs"
