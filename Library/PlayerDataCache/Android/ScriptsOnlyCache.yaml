@@ -58,13 +58,13 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 10732}
     - Class: 114
-      Script: {instanceID: 11232}
+      Script: {instanceID: 11234}
     - Class: 114
-      Script: {instanceID: 11584}
+      Script: {instanceID: 11586}
     - Class: 114
-      Script: {instanceID: 11620}
+      Script: {instanceID: 11622}
     - Class: 114
-      Script: {instanceID: 11654}
+      Script: {instanceID: 11656}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -545,4 +545,4 @@ ScriptsOnlyBuild:
   platform: 13
   scenePathNames:
   - Assets/Scenes/Game.unity
-  playerPath: /home/unity/Workspace/csci599/csci599_2.apk
+  playerPath: /home/unity/Workspace/csci599/csci599_222.apk

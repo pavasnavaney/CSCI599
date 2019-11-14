@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
     public Camera mainCamera;
     public Camera secCamera;
     private Question q = null;
+    private Data userData = null;
     public GameObject mainCanvas;
     public GameObject resultCanvas;
     public Text resultText;
@@ -47,7 +48,7 @@ public class GameManager : MonoBehaviour
     private static float roundTime = 20f;
     private float roundTimer = roundTime;
 
-    private string serverIP = "10.25.205.100";
+    private string serverIP = "69.51.20.25"; //69.51.20.25
     private System.Int32 serverPort = 8000;
     private TcpClient socketConnection; 	
 	private Thread clientThread; 	
@@ -62,6 +63,7 @@ public class GameManager : MonoBehaviour
     private bool wrong = false;
     private bool ready;
     Sprite defaultimg;
+    private string filePath;
 
     IDictionary<string, string> dict = new Dictionary<string, string>()
         {
@@ -73,6 +75,8 @@ public class GameManager : MonoBehaviour
 
 
     void Start() {
+        filePath = Path.Combine(Application.dataPath, "userdata.json");
+        readJSON();
         connectToServer();
         defaultimg = Resources.Load<Sprite>("default_pic");
         mainCamera.enabled = false;
@@ -95,7 +99,7 @@ public class GameManager : MonoBehaviour
             playerName.text = uid.Substring(0,5);
             playerScore.text = score.ToString();
             playerTitle.text = dict.ContainsKey(uid) ? dict[uid] : dict["0"];
-            otherPlayerName.text = otherUid.Substring(0,5);
+            otherPlayerName.text = otherUid.Length > 5 ? otherUid.Substring(0,5) : otherUid;
             otherPlayerScore.text = otherScore.ToString();
             otherPlayerTitle.text = dict.ContainsKey(otherUid) ? dict[otherUid] : dict["0"];
             var oimg = Resources.Load<Sprite>(otherUid);
@@ -168,20 +172,22 @@ public class GameManager : MonoBehaviour
                 StartCoroutine(showResult());
                 resultCanvas.GetComponent<Image>().color = new Color32(28,156,15,255);
                 resultText.text = "You got it!\n\n+10";
+                userData.score = score;
+                userData.correctAnswers += 1;
             } else {
                 wrong = true;
                 StartCoroutine(showResult());
                 resultCanvas.GetComponent<Image>().color = new Color32(156,26,16,255);
                 resultText.text = "Whoopsie!";
-                
                 sendMessage("wrong:"+score);
+                userData.wrongAnswers += 1;
             }
         }
     }
     
     IEnumerator showResult () {
         resultCanvas.SetActive(true);
-        yield return new WaitForSeconds(0.8f);
+        yield return new WaitForSeconds(1.0f);
         resultCanvas.SetActive(false);
         if(!wrong) {
             round += 1;
@@ -190,14 +196,17 @@ public class GameManager : MonoBehaviour
      }
 
      void showTimer() {
-        roundTimer--;
-        // sendMessage("time:" + roundTimer);
-        if(roundTimer <= 0) {
-            StartCoroutine(showResult());
-            resultCanvas.GetComponent<Image>().color = new Color32(16,81,156,255);
-            resultText.text = "Time out!";
-            sendMessage("timeout:" + score);
-        }
+         roundTimer = roundTimer;
+        if(otherUid.Length > 1 ) {
+            roundTimer--;
+            // sendMessage("time:" + roundTimer);
+            if(roundTimer <= 0) {
+                StartCoroutine(showResult());
+                resultCanvas.GetComponent<Image>().color = new Color32(16,81,156,255);
+                resultText.text = "Time out!";
+                sendMessage("timeout:" + score);
+            }
+         }
     }
 
     private void connectToServer () { 		
@@ -217,6 +226,7 @@ public class GameManager : MonoBehaviour
         status = -5;
         loadingImage.enabled = true;
         loadingText.enabled = true;
+        userData.matches += 1;
     }
 
 	private void listenForData() { 		
@@ -246,6 +256,7 @@ public class GameManager : MonoBehaviour
                             wrong = false;
                             questionSet = false;
                             status = 1;
+                            userData.timeSpent += (roundTime - roundTimer);
                         // } else if(serverMessage.Contains("start:"))
                         // {
                         //     status = 1;
@@ -295,10 +306,27 @@ public class GameManager : MonoBehaviour
 		}     
 	} 
 
+    void readJSON() {
+        if(File.Exists(filePath)) {
+            string dataAsJson = File.ReadAllText(filePath); 
+            userData = JsonUtility.FromJson<Data>(dataAsJson);
+        } else {
+            Debug.LogError("Cannot Find Data file.");
+        }
+    }
+    
+    void writeJSON() {
+        string itemsToJSON = "";
+        itemsToJSON = JsonUtility.ToJson(userData, true);
+        File.WriteAllText(filePath, itemsToJSON);
+    }
+
     void OnApplicationQuit()
     {
         socketConnection.Close();
         clientThread.Abort();
+        userData.timeSpent += (roundTime - roundTimer);
+        writeJSON();
         Debug.Log("Application ending after " + Time.time + " seconds");
     }
 
