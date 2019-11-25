@@ -11,6 +11,8 @@ using System.Threading;
 using System.Text;
 using UnityEngine.Networking;
 using System.Threading.Tasks;
+// using UnityEditor;
+
 public class GameManager : MonoBehaviour
 {
     public Camera mainCamera;
@@ -19,6 +21,8 @@ public class GameManager : MonoBehaviour
     private Data userData = null;
     public GameObject mainCanvas;
     public GameObject resultCanvas;
+    public GameObject resBack;
+    public GameObject endCanvas;
     public Text resultText;
     public Text playerName;
     public Text playerScore;
@@ -34,8 +38,14 @@ public class GameManager : MonoBehaviour
     public Image playerPic;
     public Image otherPlayerPic;
     public GameObject wrongSign;
+    public GameObject playerWrongSign;
     public Slider playerSlider;
     public Slider otherPlayerSlider;
+	
+	//User
+	[SerializeField] public InputField emailInputField, usernameInputField;
+	private string email="",username="";
+	
     [SerializeField] private Text questionText;
     [SerializeField] private Text answerText1;
     [SerializeField] private Text answerText2;
@@ -64,14 +74,15 @@ public class GameManager : MonoBehaviour
     private bool ready;
     Sprite defaultimg;
     private string filePath;
+    private string userdata;
 
     IDictionary<string, string> dict = new Dictionary<string, string>()
-        {
-            {"0","Explorer"},
-            {"460c00440b52418fbb084cfebe8d0b12","Achiever"},
-            {"ebadfd2b6c0597ca351bafe1c32c9691", "Champion"}
-            
-        };
+    {
+        {"0","Explorer"},
+        {"460c00440b52418fbb084cfebe8d0b12","Achiever"},
+        {"ebadfd2b6c0597ca351bafe1c32c9691", "Champion"}
+        
+    };
 
 
     void Start() {
@@ -83,6 +94,7 @@ public class GameManager : MonoBehaviour
         secCamera.enabled = true;
         loadingImage.enabled = false;
         loadingText.enabled = false;
+		
         startBtn.GetComponent<Button>().onClick.AddListener(() => { startGameButton(); }); 
         // readJSON();
         // resultCanvas.SetActive(false);
@@ -133,12 +145,17 @@ public class GameManager : MonoBehaviour
             } else if(status == 3)
             {
                 StartCoroutine(showResult());
-                resultCanvas.GetComponent<Image>().color = new Color32(156,26,16,255);
+                resultText.color = new Color32(156,26,16,255);
                 resultText.text = "other player got it!";
-                // status = -1;
+                status = -1;
             } else if(status == 4)
             {
                 wrongSign.SetActive(true);
+            } else if(status == 5)
+            {
+                endCanvas.SetActive(true);
+                socketConnection.Close();
+                clientThread.Abort();
             }
         } else
         {
@@ -152,7 +169,12 @@ public class GameManager : MonoBehaviour
         if (q != null && questionSet == false) {
             setQuestion();
             wrongSign.SetActive(false);
+            playerWrongSign.SetActive(false);
         }
+    }
+
+    public void restart() {
+
     }
     
     void setQuestion() {
@@ -162,32 +184,52 @@ public class GameManager : MonoBehaviour
         answerText3.text = q.answerChoices[2];
         answerText4.text = q.answerChoices[3];
         questionSet = true;
+        GameObject[] gos = GameObject.FindObjectsOfType(typeof(GameObject)) as GameObject[];
+        foreach(GameObject go in gos)
+        {
+            if(go.layer == 10) {
+                go.GetComponent<Image>().color =new Color32(79,79,79,255);
+                go.GetComponent<Button>().interactable = true;
+            }
+        }
     }
     
     void checkAnswer(Button button) {
         if(!wrong) {
             if(int.Parse(button.name)-1 == q.correctAnswerIndex) {
                 score += 10;
-                sendMessage("next:"+score);
                 StartCoroutine(showResult());
-                resultCanvas.GetComponent<Image>().color = new Color32(28,156,15,255);
-                resultText.text = "You got it!\n\n+10";
+                resBack.GetComponent<Image>().color = new Color32(68,162,64,255);
+                // resultText.color = new Color32(78,255,46,255);
+                resultText.text = "Correct!\n\n+10";
                 userData.score = score;
                 userData.correctAnswers += 1;
+				button.GetComponent<Image>().color = new Color32(0,255,0,255);
+                sendMessage("next:"+score);
             } else {
                 wrong = true;
                 StartCoroutine(showResult());
-                resultCanvas.GetComponent<Image>().color = new Color32(156,26,16,255);
-                resultText.text = "Whoopsie!";
-                sendMessage("wrong:"+score);
+                resBack.GetComponent<Image>().color = new Color32(186,58,58,255);
+                // resultText.color = new Color32(156,26,16,255);
+                resultText.text = "Incorrect!";
                 userData.wrongAnswers += 1;
+                GameObject[] gos = GameObject.FindObjectsOfType(typeof(GameObject)) as GameObject[];
+                foreach(GameObject go in gos)
+                {
+                    if(go.layer == 10) {
+                        go.GetComponent<Button>().interactable = false;
+                    }
+                }
+                button.GetComponent<Image>().color = new Color32(255,0,0,255);
+                playerWrongSign.SetActive(true);
+                sendMessage("wrong:"+score);
             }
         }
     }
     
     IEnumerator showResult () {
         resultCanvas.SetActive(true);
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(1.1f);
         resultCanvas.SetActive(false);
         if(!wrong) {
             round += 1;
@@ -201,9 +243,13 @@ public class GameManager : MonoBehaviour
             roundTimer--;
             // sendMessage("time:" + roundTimer);
             if(roundTimer <= 0) {
-                StartCoroutine(showResult());
-                resultCanvas.GetComponent<Image>().color = new Color32(16,81,156,255);
-                resultText.text = "Time out!";
+                if (!wrong)
+                {
+                    StartCoroutine(showResult());
+                    resultText.color = new Color32(16,81,156,255);
+                    resultText.text = "Time out!";
+                }
+                
                 sendMessage("timeout:" + score);
             }
          }
@@ -221,12 +267,34 @@ public class GameManager : MonoBehaviour
 	}  	
 
     void startGameButton() {
-        sendMessage("ready:"+uid);  
-        ready = true;
-        status = -5;
-        loadingImage.enabled = true;
-        loadingText.enabled = true;
-        userData.matches += 1;
+        email=emailInputField.text;
+		username=usernameInputField.text;
+		// PostToDatabase();
+		sendMessage("ready:"+uid);  
+		ready = true;
+		status = -5;
+		loadingImage.enabled = true;
+		loadingText.enabled = true;
+		userData.matches += 1;
+    }
+	
+	
+	private void PostToDatabase()
+	{
+		userdata="{\"email\":\"" +email+"\",\"username\":\""+username+"\",\"returnSecureToken\":true}";
+        print(userdata);
+        StartCoroutine(postData());
+	}
+
+    IEnumerator postData() {
+        using (UnityWebRequest www = UnityWebRequest.Put("https://csci599-brainiton-4add5.firebaseio.com/users/" + username + ".json", userdata))
+        {
+            yield return www.Send();
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.Log(www.error);
+            }
+        }
     }
 
 	private void listenForData() { 		
@@ -263,7 +331,7 @@ public class GameManager : MonoBehaviour
                         } else if(serverMessage.Contains("wrong:"))
                         {
                             status = 4;
-                        }else if(serverMessage.Contains("players:"))
+                        } else if(serverMessage.Contains("players:"))
                         {
                             string temp = serverMessage.Split(':')[1];
                             if (uid!=temp)
@@ -272,9 +340,12 @@ public class GameManager : MonoBehaviour
                             } else
                             {
                                 otherUid = serverMessage.Split(':')[2];
-                            }
+                            } 
                             
                             // otherPlayerName =  
+                        } else if(serverMessage.Contains("finish"))
+                        {
+                            status = 5;
                         }
 
                         
